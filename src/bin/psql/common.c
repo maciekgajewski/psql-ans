@@ -23,6 +23,7 @@
 #include "command.h"
 #include "copy.h"
 #include "mbprint.h"
+#include "asn.h"
 
 
 
@@ -950,7 +951,12 @@ SendQuery(const char *query)
 
 		/* but printing results isn't: */
 		if (OK && results)
+		{
 			OK = PrintQueryResults(results);
+			
+			if (pset.cur_cmd_interactive)
+				AddToHistory(pset.asn, results);
+		}
 	}
 	else
 	{
@@ -1227,7 +1233,7 @@ ExecQueryUsingCursor(const char *query, double *elapsed_msec)
 		}
 
 		printQuery(results, &my_popt, pset.queryFout, pset.logfile);
-
+		
 		PQclear(results);
 
 		/* after the first result set, disallow header decoration */

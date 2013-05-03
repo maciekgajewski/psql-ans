@@ -12,7 +12,8 @@
 
 static int global_asn_num = 0;
 
-static void CreateTable(struct _asn* item);
+static void CreateTable(PGconn *db, struct _asn* item);
+static const char* GetTypeName(PGconn *db, Oid oid);
 
 /*
  * Creates empty entry, serving as list head
@@ -87,7 +88,7 @@ AddToHistory(AsnHistory history, PGresult* result)
 }
 
 const char*
-GetOrCreateTable(AsnHistory history, const char* name)
+GetOrCreateTable(AsnHistory history, PGconn *db, const char* name)
 {
 	struct _asn* item;
 	
@@ -105,7 +106,7 @@ GetOrCreateTable(AsnHistory history, const char* name)
 			if (item->tableName)
 				return item->tableName;
 			
-			CreateTable(item);
+			CreateTable(db, item);
 			if (item->tableName)
 				return item->tableName;
 		}
@@ -114,15 +115,62 @@ GetOrCreateTable(AsnHistory history, const char* name)
 	return NULL;
 }
 
-static void CreateTable(struct _asn* item)
+static
+void 
+CreateTable(PGconn *db, struct _asn* item)
 {
 	char tableNameBuf[32];
+	const int qbufsize=1024;
+	char queryBuf[qbufsize];
+	char* queryPtr;
 	int nameLen;
+	int i;
 	
 	if (!item)
-		return NULL;
+		return;
 	
 	nameLen = snprintf(tableNameBuf, 32, "_table_%s", item->name);
-	item->tableName = pg_malloc(nameLen+1);
-	strcpy(item->tableName, tableNameBuf);
+	
+	/* Build CREATE TABLE query */
+	queryPtr = queryBuf;
+	queryPtr += snprintf(queryPtr, qbufsize-(int)(queryPtr-queryBuf), "CREATE TEMP TABLE %s (\n", tableNameBuf);
+	
+	for (i = 0; i < item->numColumns; ++i)
+	{
+		const char* typeName;
+		const char* format;
+		
+		typeName = GetTypeName(db, item->columnTypes[i]);
+		if (!typeName)
+			return;
+		
+		if (i == item->numColumns-1)
+			format = "%s %s\n";
+		else
+			format = "%s %s,\n";
+			
+		queryPtr += snprintf(queryPtr, qbufsize-(int)(queryPtr-queryBuf), format, item->columnNames[i], typeName);
+	}
+	queryPtr += snprintf(queryPtr, qbufsize-(int)(queryPtr-queryBuf), ");");
+	
+	/* see if we did'n overrun buffer */
+	if (queryPtr == queryBuf+qbufsize)
+	{
+		printf(">>>AND CREATE TABLE query buffer overrun\n");
+		return; 
+	}
+	
+	/* execute query */
+	// TODO
+	printf(">>>ANS: now i should execute: \n%s\n", queryBuf);
+	
+	item->tableName = pg_strdup(tableNameBuf);
+}
+
+static
+const char* 
+GetTypeName(PGconn *db, Oid oid)
+{
+	// TODO
+	return "integer";
 }

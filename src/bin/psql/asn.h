@@ -36,6 +36,6 @@ void		AddToHistory(AsnHistory history, PGresult* result);
  * If none found, returns NULL.
  * If found, but table not created yet, creates the table first.
  */
-const char* GetOrCreateTable(AsnHistory history, const char* name);
+const char* GetOrCreateTable(AsnHistory history, PGconn *db, const char* name);
 
 #endif

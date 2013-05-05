@@ -13,7 +13,7 @@
 static int global_asn_num = 0;
 
 static void CreateTable(PGconn *db, struct _asn* item);
-static const char* GetTypeName(PGconn *db, Oid oid);
+static char* GetTypeName(PGconn *db, Oid oid);
 
 /*
  * Creates empty entry, serving as list head
@@ -109,6 +109,8 @@ GetOrCreateTable(AsnHistory history, PGconn *db, const char* name)
 			CreateTable(db, item);
 			if (item->tableName)
 				return item->tableName;
+			else
+				return NULL;
 		}
 	}
 	
@@ -120,7 +122,7 @@ void
 CreateTable(PGconn *db, struct _asn* item)
 {
 	char tableNameBuf[32];
-	const int qbufsize=1024;
+	const int qbufsize=2048;
 	char queryBuf[qbufsize];
 	char* queryPtr;
 	int nameLen;
@@ -130,6 +132,10 @@ CreateTable(PGconn *db, struct _asn* item)
 		return;
 	
 	nameLen = snprintf(tableNameBuf, 32, "_table_%s", item->name);
+	if (nameLen >= 32)
+	{
+		return;
+	}
 	
 	/* Build CREATE TABLE query */
 	queryPtr = queryBuf;
@@ -137,7 +143,7 @@ CreateTable(PGconn *db, struct _asn* item)
 	
 	for (i = 0; i < item->numColumns; ++i)
 	{
-		const char* typeName;
+		char* typeName;
 		const char* format;
 		
 		typeName = GetTypeName(db, item->columnTypes[i]);
@@ -150,13 +156,17 @@ CreateTable(PGconn *db, struct _asn* item)
 			format = "%s %s,\n";
 			
 		queryPtr += snprintf(queryPtr, qbufsize-(int)(queryPtr-queryBuf), format, item->columnNames[i], typeName);
+		free(typeName);
+		if (queryPtr >= queryBuf+qbufsize)
+		{
+			return; 
+		}
 	}
 	queryPtr += snprintf(queryPtr, qbufsize-(int)(queryPtr-queryBuf), ");");
 	
 	/* see if we did'n overrun buffer */
-	if (queryPtr == queryBuf+qbufsize)
+	if (queryPtr >= queryBuf+qbufsize)
 	{
-		printf(">>>AND CREATE TABLE query buffer overrun\n");
 		return; 
 	}
 	
@@ -167,10 +177,38 @@ CreateTable(PGconn *db, struct _asn* item)
 	item->tableName = pg_strdup(tableNameBuf);
 }
 
+/* free the typename after use */
 static
-const char* 
+char* 
 GetTypeName(PGconn *db, Oid oid)
 {
-	// TODO
-	return "integer";
+	const int bufsize = 1024;
+	char queryBuf[bufsize];
+	int sres;
+	PGresult* qres;
+	char* typeName;
+	
+	sres = snprintf(queryBuf, bufsize, "SELECT typname FROM pg_type WHERE oid=%d;", oid);
+	if ( sres < 0 || sres > bufsize)
+		return NULL;
+	
+	qres = PQexec(db, queryBuf);
+	if (!qres)
+		return NULL;
+	
+	if (PQresultStatus(qres) != PGRES_TUPLES_OK)
+	{
+		PQclear(qres);
+		return NULL;
+	}
+	
+	if (PQntuples(qres) != 1 && PQnfields(qres) != 1)
+	{
+		PQclear(qres);
+		return NULL;
+	}
+
+	typeName = pg_strdup(PQgetvalue(qres, 0, 0));
+	PQclear(qres);
+	return typeName;
 }

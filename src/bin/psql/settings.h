@@ -11,7 +11,7 @@
 
 #include "variables.h"
 #include "print.h"
-#include "asn.h"
+#include "ans.h"
 
 #define DEFAULT_FIELD_SEP "|"
 #define DEFAULT_RECORD_SEP "\n"
@@ -95,7 +95,7 @@ typedef struct _psqlSettings
 
 	VariableSpace vars;			/* "shell variable" repository */
 	
-	AsnHistory	asn;			/* query result history */
+	AnsHistory	ans;			/* query result (answer) history */
 
 	/*
 	 * The remaining fields are set by assign hooks associated with entries in

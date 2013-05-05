@@ -3,27 +3,27 @@
  *
  * Copyright (c) 2013, PostgreSQL Global Development Group
  *
- * src/bin/psql/asn.c
+ * src/bin/psql/ans.c
  */
 
-#include "asn.h"
+#include "ans.h"
 
 #include "postgres_fe.h"
 
-static int global_asn_num = 0;
+static int global_ans_num = 0;
 
-static void CreateTable(PGconn *db, struct _asn* item);
+static void CreateTable(PGconn *db, struct _ans* item);
 static char* GetTypeName(PGconn *db, Oid oid);
 static char* BuildData(PGresult* result);
 
 /*
  * Creates empty entry, serving as list head
  */
-AsnHistory CreateAsnHistory(void)
+AnsHistory CreateAnsHistory(void)
 {
-	struct _asn* head;
+	struct _ans* head;
 	
-	head = pg_malloc(sizeof(struct _asn));
+	head = pg_malloc(sizeof(struct _ans));
 	
 	head->numColumns = 0;
 	head->columnTypes = NULL;
@@ -36,9 +36,9 @@ AsnHistory CreateAsnHistory(void)
 }
 
 void
-AddToHistory(AsnHistory history, PGresult* result)
+AddToHistory(AnsHistory history, PGresult* result)
 {
-	struct _asn* item;
+	struct _ans* item;
 	int numRows, numColumns;
 	int i;
 	char* data;
@@ -56,7 +56,7 @@ AddToHistory(AsnHistory history, PGresult* result)
 	if (!data)
 		return;
 	
-	item = pg_malloc(sizeof(struct _asn));
+	item = pg_malloc(sizeof(struct _ans));
 
 	/* read meta-data: column names and types */
 	item->numColumns = numColumns;
@@ -81,7 +81,7 @@ AddToHistory(AsnHistory history, PGresult* result)
 
 	/* name */
 	item->name = pg_malloc(10);
-	sprintf(item->name, "asn%d", global_asn_num++);
+	sprintf(item->name, "ans%d", global_ans_num++);
 	
 	printf("Query result stored as :%s\n", item->name);
 	
@@ -90,9 +90,9 @@ AddToHistory(AsnHistory history, PGresult* result)
 }
 
 const char*
-GetOrCreateTable(AsnHistory history, PGconn *db, const char* name)
+GetOrCreateTable(AnsHistory history, PGconn *db, const char* name)
 {
-	struct _asn* item;
+	struct _ans* item;
 	
 	if (!history || !name)
 	{
@@ -121,7 +121,7 @@ GetOrCreateTable(AsnHistory history, PGconn *db, const char* name)
 
 static
 void 
-CreateTable(PGconn *db, struct _asn* item)
+CreateTable(PGconn *db, struct _ans* item)
 {
 	char tableNameBuf[32];
 	char copyQuery[64];

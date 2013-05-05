@@ -3,16 +3,16 @@
  *
  * Copyright (c) 2013, PostgreSQL Global Development Group
  *
- * src/bin/psql/asn.h
+ * src/bin/psql/ans.h
  */
-#ifndef ASN_H
-#define ASN_H
+#ifndef ANS_H
+#define ANS_H
 
 #include "libpq-fe.h"
 
 
 /* Cache of last N query results, stored in a format ready to insert itno tempary table when needed */
-struct _asn 
+struct _ans 
 {
 	int		numColumns;
 	Oid		*columnTypes;
@@ -22,13 +22,13 @@ struct _asn
 	char	*name; // hiostory item name
 	char	*tableName; // corresponding table in DB. NULL if not created yet
 	
-	struct _asn	*next;
+	struct _ans	*next;
 };
 
-typedef struct _asn* AsnHistory;
+typedef struct _ans* AnsHistory;
 
-AsnHistory	CreateAsnHistory(void);
-void		AddToHistory(AsnHistory history, PGresult* result);
+AnsHistory	CreateAnsHistory(void);
+void		AddToHistory(AnsHistory history, PGresult* result);
 
 
 /*
@@ -36,6 +36,6 @@ void		AddToHistory(AsnHistory history, PGresult* result);
  * If none found, returns NULL.
  * If found, but table not created yet, creates the table first.
  */
-const char* GetOrCreateTable(AsnHistory history, PGconn *db, const char* name);
+const char* GetOrCreateTable(AnsHistory history, PGconn *db, const char* name);
 
 #endif

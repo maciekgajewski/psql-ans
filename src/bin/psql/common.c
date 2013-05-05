@@ -23,7 +23,7 @@
 #include "command.h"
 #include "copy.h"
 #include "mbprint.h"
-#include "asn.h"
+#include "ans.h"
 
 
 
@@ -955,7 +955,7 @@ SendQuery(const char *query)
 			OK = PrintQueryResults(results);
 			
 			if (pset.cur_cmd_interactive)
-				AddToHistory(pset.asn, results);
+				AddToHistory(pset.ans, results);
 		}
 	}
 	else

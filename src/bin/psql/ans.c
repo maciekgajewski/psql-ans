@@ -114,6 +114,7 @@ GetOrCreateTable(AnsHistory history, PGconn *db, const char* name)
 			else
 				return NULL;
 		}
+		item = item->next;
 	}
 	
 	return NULL;

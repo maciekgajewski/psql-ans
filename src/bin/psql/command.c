@@ -51,7 +51,7 @@
 #include "psqlscan.h"
 #include "settings.h"
 #include "variables.h"
-#include "asn.h"
+#include "ans.h"
 
 
 /* functions for use in this file */

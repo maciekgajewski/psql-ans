@@ -742,7 +742,7 @@ other			.
 						 */
 						const char* tableName;
 						
-						tableName = GetOrCreateTable(pset.asn, pset.db, varname);
+						tableName = GetOrCreateTable(pset.ans, pset.db, varname);
 						if (tableName)
 						{
 							push_new_buffer(tableName, varname);

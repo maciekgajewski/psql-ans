@@ -14,6 +14,7 @@ static int global_asn_num = 0;
 
 static void CreateTable(PGconn *db, struct _asn* item);
 static char* GetTypeName(PGconn *db, Oid oid);
+static char* BuildData(PGresult* result);
 
 /*
  * Creates empty entry, serving as list head
@@ -40,6 +41,7 @@ AddToHistory(AsnHistory history, PGresult* result)
 	struct _asn* item;
 	int numRows, numColumns;
 	int i;
+	char* data;
 	
 	if (!history || !result)
 		return;
@@ -48,6 +50,10 @@ AddToHistory(AsnHistory history, PGresult* result)
 	numRows = PQntuples(result);
 	
 	if (numColumns <= 0 || numRows <= 0)
+		return;
+	
+	data = BuildData(result);
+	if (!data)
 		return;
 	
 	item = pg_malloc(sizeof(struct _asn));
@@ -66,13 +72,9 @@ AddToHistory(AsnHistory history, PGresult* result)
 		name = PQfname(result, i);
 		item->columnNames[i] = pg_malloc(strlen(name) + 1);
 		strcpy(item->columnNames[i], name);
-		
-		// TODO debug output
-		//printf(">>> ASN column %d %s %d\n", i, name, (int)(item->columnTypes[i]));
 	}
 	
-	/* TODO build data here */
-	item->data = NULL;
+	item->data = data;
 	
 	/* Table creation deferred to when the ASN is actually used */
 	item->tableName = NULL;
@@ -122,17 +124,24 @@ void
 CreateTable(PGconn *db, struct _asn* item)
 {
 	char tableNameBuf[32];
+	char copyQuery[64];
 	const int qbufsize=2048;
 	char queryBuf[qbufsize];
 	char* queryPtr;
-	int nameLen;
+	int len;
 	int i;
+	PGresult* qres;
 	
 	if (!item)
 		return;
 	
-	nameLen = snprintf(tableNameBuf, 32, "_table_%s", item->name);
-	if (nameLen >= 32)
+	len = snprintf(tableNameBuf, 32, "_table_%s", item->name);
+	if (len >= 32)
+	{
+		return;
+	}
+	len = snprintf(copyQuery, 64, "COPY %s FROM STDIN", tableNameBuf);
+	if (len >= 64)
 	{
 		return;
 	}
@@ -163,16 +172,47 @@ CreateTable(PGconn *db, struct _asn* item)
 		}
 	}
 	queryPtr += snprintf(queryPtr, qbufsize-(int)(queryPtr-queryBuf), ");");
-	
-	/* see if we did'n overrun buffer */
 	if (queryPtr >= queryBuf+qbufsize)
 	{
 		return; 
 	}
 	
-	/* execute query */
-	// TODO
-	printf(">>>ANS: now i should execute: \n%s\n", queryBuf);
+	/* create and populate table */
+	PQclear(PQexec(db, "BEGIN"));
+	qres = PQexec(db, queryBuf);
+	if (PQresultStatus(qres) != PGRES_COMMAND_OK)
+	{
+		PQclear(qres);
+		PQclear(PQexec(db, "ROLLBACK"));
+		return;
+	}
+	PQclear(qres);
+
+	qres = PQexec(db, copyQuery);
+	if (PQresultStatus(qres) != PGRES_COPY_IN)
+	{
+		PQclear(qres);
+		PQclear(PQexec(db, "ROLLBACK"));
+		return;
+	}
+	PQclear(qres);
+	
+	PQputCopyData(db, item->data, strlen(item->data));
+	len = PQputCopyEnd(db, NULL);
+	if (len != 1)
+	{
+		PQclear(PQexec(db, "ROLLBACK"));
+		return;
+	}
+	qres = PQgetResult(db);
+	if (PQresultStatus(qres) != PGRES_COMMAND_OK)
+	{
+		PQclear(qres);
+		PQclear(PQexec(db, "ROLLBACK"));
+		return;
+	}
+	PQclear(qres);
+	PQclear(PQexec(db, "COMMIT"));
 	
 	item->tableName = pg_strdup(tableNameBuf);
 }
@@ -211,4 +251,80 @@ GetTypeName(PGconn *db, Oid oid)
 	typeName = pg_strdup(PQgetvalue(qres, 0, 0));
 	PQclear(qres);
 	return typeName;
+}
+
+/* Convert query data into data buffer in COPY TEXT format.
+ * returns NULL on error
+ * caller owns the data
+ */
+static 
+char* 
+BuildData(PGresult* result)
+{
+	int cols, rows;
+	int bufferSize;
+	int r,c;
+	char* buffer;
+	char* dataPtr;
+	
+	if (!result)
+		return NULL;
+	
+	cols = PQnfields(result);
+	rows = PQntuples(result);
+	
+	/* first pass - measure the size */
+	bufferSize = 0;
+	for(r = 0; r < rows; r++)
+	{
+		for(c = 0; c < cols; c++)
+		{
+			if (PQgetisnull(result, r, c))
+			{
+				bufferSize += 2; /* 2 = size of null literal \N */
+			}
+			else
+			{
+				/* TODO: escaping! */
+				bufferSize += strlen(PQgetvalue(result, r, c));
+			}
+			bufferSize +=1; /* column or row delimiter*/
+		}
+	}
+	bufferSize += 4; /* end-of-data marker \. + NULL terminiator */
+	
+	/* second pass = build the buffer */
+	buffer = pg_malloc(bufferSize);
+	dataPtr = buffer;
+	
+	for(r = 0; r < rows; r++)
+	{
+		for(c = 0; c < cols; c++)
+		{
+			if (PQgetisnull(result, r, c))
+			{
+				strcpy(dataPtr, "\\N");
+				dataPtr += 2;
+			}
+			else
+			{
+				char* value = PQgetvalue(result, r, c);
+				/* TODO: escaping! */
+				strcpy(dataPtr, value);
+				dataPtr += strlen(value);
+			}
+			if (c == cols-1)
+			{
+				strcpy(dataPtr, "\n");
+			}
+			else
+			{
+				strcpy(dataPtr, "\t");
+			}
+			dataPtr += 1;
+		}
+	}
+	strcpy(dataPtr, "\\.\n");
+	
+	return buffer;
 }

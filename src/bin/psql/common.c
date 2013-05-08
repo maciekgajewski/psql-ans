@@ -954,8 +954,7 @@ SendQuery(const char *query)
 		{
 			OK = PrintQueryResults(results);
 			
-			if (pset.cur_cmd_interactive)
-				AddToHistory(pset.ans, results);
+			AddToHistory(pset.ans, results);
 		}
 	}
 	else

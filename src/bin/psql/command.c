@@ -40,6 +40,7 @@
 #include "pqexpbuffer.h"
 #include "dumputils.h"
 
+#include "ans.h"
 #include "common.h"
 #include "copy.h"
 #include "describe.h"
@@ -1698,6 +1699,7 @@ do_connect(char *dbname, char *user, char *host, char *port)
 	PQsetNoticeProcessor(n_conn, NoticeProcessor, NULL);
 	pset.db = n_conn;
 	SyncVariables();
+	AnsClearTableNames(pset.ans);
 	connection_warnings(false); /* Must be after SyncVariables */
 
 	/* Tell the user about the new connection */

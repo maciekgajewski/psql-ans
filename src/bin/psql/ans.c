@@ -329,3 +329,20 @@ BuildData(PGresult* result)
 	
 	return buffer;
 }
+
+void AnsClearTableNames(AnsHistory history)
+{
+	struct _ans* item = history;
+	
+	while(item->next)
+	{
+		item = item->next;
+		
+		if (item->tableName)
+		{
+			free(item->tableName);
+			item->tableName = NULL;
+		}
+	}
+	
+}

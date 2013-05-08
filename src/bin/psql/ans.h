@@ -38,4 +38,10 @@ void		AddToHistory(AnsHistory history, PGresult* result);
  */
 const char* GetOrCreateTable(AnsHistory history, PGconn *db, const char* name);
 
+/* Should be called when new connection is open.
+ * Because all the tables used by ANS are temporary and kept in current DB, thety are no longer valid
+ * after the client connect to new database
+ */
+void AnsClearTableNames(AnsHistory history);
+
 #endif

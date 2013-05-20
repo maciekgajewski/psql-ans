@@ -207,6 +207,38 @@ exec_command(const char *cmd,
 			success = do_pset("format", "unaligned", &pset.popt, pset.quiet);
 	}
 
+	/* \ans - toggle query result history */
+	else if (strcmp(cmd, "ans") == 0)
+	{
+		char	 *opt = psql_scan_slash_option(scan_state,
+												 OT_NORMAL, NULL, false);
+		bool	new_ans;
+
+		if (opt)
+			new_ans = ParseVariableBool(opt);
+		else
+			new_ans = !pset.ans;
+		
+		if (new_ans != !!pset.ans)
+		{
+			if (new_ans)
+			{
+				pset.ans = CreateAnsHistory();
+				if (!pset.quiet)
+					puts(_("Query result history is on."));
+			}
+			else
+			{
+				DestroyAnsHistory(pset.db, pset.ans);
+				pset.ans = NULL;
+				if (!pset.quiet)
+					puts(_("Query result history is off."));
+				
+			}
+		}
+		free(opt);
+	}
+
 	/* \C -- override table title (formerly change HTML caption) */
 	else if (strcmp(cmd, "C") == 0)
 	{

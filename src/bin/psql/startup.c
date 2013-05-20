@@ -148,7 +148,7 @@ main(int argc, char *argv[])
 	SetVariable(pset.vars, "PROMPT2", DEFAULT_PROMPT2);
 	SetVariable(pset.vars, "PROMPT3", DEFAULT_PROMPT3);
 	
-	pset.ans = CreateAnsHistory();
+	pset.ans = NULL;
 
 	parse_psql_options(argc, argv, &options);
 

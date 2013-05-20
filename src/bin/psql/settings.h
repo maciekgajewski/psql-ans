@@ -95,7 +95,7 @@ typedef struct _psqlSettings
 
 	VariableSpace vars;			/* "shell variable" repository */
 	
-	AnsHistory	ans;			/* query result (answer) history */
+	AnsHistory	ans;			/* query result (answer) history. NULL if disabled */
 
 	/*
 	 * The remaining fields are set by assign hooks associated with entries in

@@ -19,7 +19,7 @@ struct _ans
 	char	**columnNames;
 	char	*data;
 	
-	char	*name; // hiostory item name
+	char	*name; // history item name
 	char	*tableName; // corresponding table in DB. NULL if not created yet
 	
 	struct _ans	*next;
@@ -29,6 +29,7 @@ typedef struct _ans* AnsHistory;
 
 AnsHistory	CreateAnsHistory(void);
 void		AddToHistory(AnsHistory history, PGresult* result);
+void		DestroyAnsHistory(PGconn *db, AnsHistory item);
 
 
 /*

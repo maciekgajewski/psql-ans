@@ -31,6 +31,7 @@ AnsHistory CreateAnsHistory(void)
 	head->data = NULL;
 	head->next = NULL;
 	head->tableName = NULL;
+	head->name = NULL;
 	
 	return head;
 }
@@ -83,7 +84,7 @@ AddToHistory(AnsHistory history, PGresult* result)
 	item->name = pg_malloc(10);
 	sprintf(item->name, "ans%d", global_ans_num++);
 	
-	printf("Query result stored as :%s\n", item->name);
+	printf(_("Query result stored as :%s\n"), item->name);
 	
 	item->next = history->next;
 	history->next = item;
@@ -345,4 +346,43 @@ void AnsClearTableNames(AnsHistory history)
 		}
 	}
 	
+}
+
+void
+DestroyAnsHistory(PGconn *db, AnsHistory item)
+{
+	if (!item)
+		return;
+	
+	if (item->next)
+		DestroyAnsHistory(db, item->next);
+	
+	if (item->data)
+		free(item->data);
+	
+	if(item->name)
+		free(item->name);
+	
+	if (item->columnTypes)
+		free(item->columnTypes);
+	
+	if (item->numColumns && item->columnNames)
+	{
+		int i;
+		for(i = 0; i < item->numColumns; i++)
+			free(item->columnNames[i]);
+		
+		free(item->columnNames);
+	}
+	
+	if (item->tableName)
+	{
+		const int bufsize = 32;
+		char deleteQuery[bufsize];
+
+		snprintf(deleteQuery, bufsize, "DROP TABLE %s", item->tableName);
+		PQclear(PQexec(db, deleteQuery));
+	}
+	
+	free(item);
 }

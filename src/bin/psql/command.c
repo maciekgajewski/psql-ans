@@ -229,15 +229,15 @@ exec_command(const char *cmd,
 		}
 		free(opt);
 	}
-	/* \ansclear - clear query result history */
-	else if (strcmp(cmd, "ansclear") == 0)
+	/* \ansclean - clear query result history */
+	else if (strcmp(cmd, "ansclean") == 0)
 	{
 		DestroyAnsHistory(pset.db, pset.ans);
 		pset.ans = CreateAnsHistory();
 		
 		if (!pset.quiet)
 		{
-			puts(_("Query result history has been removed."));
+			puts(_("Query result history cleaned."));
 		}
 	}
 

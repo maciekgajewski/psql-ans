@@ -289,6 +289,11 @@ slashUsage(unsigned short int pager)
 					  "  \\lo_import FILE [COMMENT]\n"
 					  "  \\lo_list\n"
 					  "  \\lo_unlink LOBOID      large object operations\n"));
+	fprintf(output, "\n");
+
+	fprintf(output, _("Query result history\n"));
+	fprintf(output, _("  \\ans [on|off]          toggle query result history (currently %s)\n"), ON(pset.ans_enabled));
+	fprintf(output, _("  \\ansclean              clean query result history\n"));
 
 	ClosePager(output);
 }

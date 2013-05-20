@@ -953,8 +953,8 @@ SendQuery(const char *query)
 		if (OK && results)
 		{
 			OK = PrintQueryResults(results);
-			
-			AddToHistory(pset.ans, results);
+			if (pset.ans_enabled)
+				AddToHistory(pset.ans, results);
 		}
 	}
 	else

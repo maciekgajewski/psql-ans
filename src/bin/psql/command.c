@@ -212,31 +212,33 @@ exec_command(const char *cmd,
 	{
 		char	 *opt = psql_scan_slash_option(scan_state,
 												 OT_NORMAL, NULL, false);
-		bool	new_ans;
 
 		if (opt)
-			new_ans = ParseVariableBool(opt);
+			pset.ans_enabled = ParseVariableBool(opt);
 		else
-			new_ans = !pset.ans;
+			pset.ans_enabled = !pset.ans_enabled;
 		
-		if (new_ans != !!pset.ans)
+		if (!pset.quiet)
 		{
-			if (new_ans)
-			{
-				pset.ans = CreateAnsHistory();
-				if (!pset.quiet)
-					puts(_("Query result history is on."));
-			}
+			if (pset.ans_enabled)
+				puts(_("Query result history is on."));
 			else
 			{
-				DestroyAnsHistory(pset.db, pset.ans);
-				pset.ans = NULL;
-				if (!pset.quiet)
-					puts(_("Query result history is off."));
-				
+				puts(_("Query result history is off."));
 			}
 		}
 		free(opt);
+	}
+	/* \ansclear - clear query result history */
+	else if (strcmp(cmd, "ansclear") == 0)
+	{
+		DestroyAnsHistory(pset.db, pset.ans);
+		pset.ans = CreateAnsHistory();
+		
+		if (!pset.quiet)
+		{
+			puts(_("Query result history has been removed."));
+		}
 	}
 
 	/* \C -- override table title (formerly change HTML caption) */

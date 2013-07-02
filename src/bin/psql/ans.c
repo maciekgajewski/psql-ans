@@ -246,7 +246,7 @@ GetTypeName(PGconn *db, Oid oid)
 		return NULL;
 	}
 	
-	if (PQntuples(qres) != 1 && PQnfields(qres) != 1)
+	if (PQntuples(qres) != 1 || PQnfields(qres) != 1)
 	{
 		PQclear(qres);
 		return NULL;

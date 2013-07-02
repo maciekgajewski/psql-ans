@@ -5,8 +5,10 @@
  *
  * src/bin/psql/ans.c
  */
+#include "postgres_fe.h"
 
 #include "ans.h"
+#include "stringutils.h"
 
 #include "postgres_fe.h"
 
@@ -255,84 +257,6 @@ GetTypeName(PGconn *db, Oid oid)
 	return typeName;
 }
 
-/* Returns lenght of string after escaping */
-static
-int GetEscapedLen(const char* c)
-{
-	int len = 0;
-	for(; *c; c++)
-	{
-		switch(*c)
-		{
-			case '\\':
-			case '\b':
-			case '\f':
-			case '\r':
-			case '\n':
-			case '\t':
-			case '\v':
-				len++;
-			default:
-				len++;
-		}
-	}
-	
-	return len;
-}
-
-/* Copies c to dst, escaping. Retuns pointer past the last character copied.
- * Assumes theere is enough room in the dst buffer
- */
-static
-char*
-EscapeForCopy(char* dst, const char* c)
-{
-	for(; *c; c++)
-	{
-		switch(*c)
-		{
-			case '\\':
-				*(dst++) = '\\';
-				*(dst++) = '\\';
-				break;
-				
-			case '\b':
-				*(dst++) = '\\';
-				*(dst++) = 'b';
-				break;
-				
-			case '\f':
-				*(dst++) = '\\';
-				*(dst++) = 'f';
-				break;
-				
-			case '\r':
-				*(dst++) = '\\';
-				*(dst++) = 'r';
-				break;
-				
-			case '\n':
-				*(dst++) = '\\';
-				*(dst++) = 'n';
-				break;
-				
-			case '\t':
-				*(dst++) = '\\';
-				*(dst++) = 't';
-				break;
-				
-			case '\v':
-				*(dst++) = '\\';
-				*(dst++) = 'v';
-				break;
-				
-			default:
-				*(dst++) = *c;
-		}
-	}
-	return dst;
-}
-
 /* Convert query data into data buffer in COPY TEXT format.
  * returns NULL on error
  * caller owns the data
@@ -365,7 +289,7 @@ BuildData(PGresult* result)
 			}
 			else
 			{
-				bufferSize += GetEscapedLen(PQgetvalue(result, r, c));
+				bufferSize += get_escaped_for_copy_len(PQgetvalue(result, r, c));
 			}
 			bufferSize +=1; /* column or row delimiter*/
 		}
@@ -388,7 +312,7 @@ BuildData(PGresult* result)
 			else
 			{
 				char* value = PQgetvalue(result, r, c);
-				dataPtr = EscapeForCopy(dataPtr, value);
+				dataPtr = escape_for_copy(dataPtr, value);
 			}
 			if (c == cols-1)
 			{
@@ -419,8 +343,7 @@ void AnsClearTableNames(AnsHistory history)
 			free(item->tableName);
 			item->tableName = NULL;
 		}
-	}
-	
+	}	
 }
 
 void

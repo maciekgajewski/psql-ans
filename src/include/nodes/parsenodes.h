@@ -285,6 +285,11 @@ typedef struct CollateClause
  * construct *must* be an aggregate call.  Otherwise, it might be either an
  * aggregate or some other kind of function.  However, if OVER is present
  * it had better be an aggregate or window function.
+ *
+ * Normally, you'd initialize this via makeFuncCall() and then only
+ * change the parts of the struct its defaults don't match afterwards
+ * if needed.
+ *
  */
 typedef struct FuncCall
 {
@@ -573,7 +578,7 @@ typedef struct DefElem
 
 /*
  * LockingClause - raw representation of FOR [NO KEY] UPDATE/[KEY] SHARE
- * 		options
+ *		options
  *
  * Note: lockedRels == NIL means "all relations in query".	Otherwise it
  * is a list of RangeVar nodes.  (We use RangeVar mainly because it carries
@@ -1209,6 +1214,7 @@ typedef enum AlterTableType
 	AT_AddConstraint,			/* add constraint */
 	AT_AddConstraintRecurse,	/* internal to commands/tablecmds.c */
 	AT_ReAddConstraint,			/* internal to commands/tablecmds.c */
+	AT_AlterConstraint,			/* alter constraint */
 	AT_ValidateConstraint,		/* validate constraint */
 	AT_ValidateConstraintRecurse,		/* internal to commands/tablecmds.c */
 	AT_ProcessedConstraint,		/* pre-processed add constraint (local in
@@ -1508,7 +1514,8 @@ typedef struct CreateStmt
 
 typedef enum ConstrType			/* types of constraints */
 {
-	CONSTR_NULL,				/* not standard SQL, but a lot of people expect it */
+	CONSTR_NULL,				/* not standard SQL, but a lot of people
+								 * expect it */
 	CONSTR_NOTNULL,
 	CONSTR_DEFAULT,
 	CONSTR_CHECK,

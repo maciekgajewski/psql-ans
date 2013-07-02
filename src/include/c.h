@@ -53,7 +53,7 @@
 #include "pg_config.h"
 #include "pg_config_manual.h"	/* must be after pg_config.h */
 
-#if !defined(WIN32) && !defined(__CYGWIN__)	/* win32 includes further down */
+#if !defined(WIN32) && !defined(__CYGWIN__)		/* win32 includes further down */
 #include "pg_config_os.h"		/* must be before any system header files */
 #endif
 
@@ -573,6 +573,8 @@ typedef NameData *Name;
 #define AssertMacro(condition)	((void)true)
 #define AssertArg(condition)
 #define AssertState(condition)
+#define Trap(condition, errorType)
+#define TrapMacro(condition, errorType)	(true)
 
 #elif defined(FRONTEND)
 
@@ -581,8 +583,7 @@ typedef NameData *Name;
 #define AssertMacro(p)	((void) assert(p))
 #define AssertArg(condition) assert(condition)
 #define AssertState(condition) assert(condition)
-
-#else /* USE_ASSERT_CHECKING && !FRONTEND */
+#else							/* USE_ASSERT_CHECKING && !FRONTEND */
 
 /*
  * Trap
@@ -618,8 +619,7 @@ typedef NameData *Name;
 
 #define AssertState(condition) \
 		Trap(!(condition), "BadState")
-
-#endif /* USE_ASSERT_CHECKING && !FRONTEND */
+#endif   /* USE_ASSERT_CHECKING && !FRONTEND */
 
 
 /*
@@ -629,7 +629,7 @@ typedef NameData *Name;
  * throw a compile error using the "errmessage" (a string literal).
  *
  * gcc 4.6 and up supports _Static_assert(), but there are bizarre syntactic
- * placement restrictions.  These macros make it safe to use as a statement
+ * placement restrictions.	These macros make it safe to use as a statement
  * or in an expression, respectively.
  *
  * Otherwise we fall back on a kluge that assumes the compiler will complain
@@ -641,12 +641,12 @@ typedef NameData *Name;
 	do { _Static_assert(condition, errmessage); } while(0)
 #define StaticAssertExpr(condition, errmessage) \
 	({ StaticAssertStmt(condition, errmessage); true; })
-#else /* !HAVE__STATIC_ASSERT */
+#else							/* !HAVE__STATIC_ASSERT */
 #define StaticAssertStmt(condition, errmessage) \
 	((void) sizeof(struct { int static_assert_failure : (condition) ? 1 : -1; }))
 #define StaticAssertExpr(condition, errmessage) \
 	StaticAssertStmt(condition, errmessage)
-#endif /* HAVE__STATIC_ASSERT */
+#endif   /* HAVE__STATIC_ASSERT */
 
 
 /*
@@ -667,14 +667,14 @@ typedef NameData *Name;
 #define AssertVariableIsOfTypeMacro(varname, typename) \
 	((void) StaticAssertExpr(__builtin_types_compatible_p(__typeof__(varname), typename), \
 	 CppAsString(varname) " does not have type " CppAsString(typename)))
-#else /* !HAVE__BUILTIN_TYPES_COMPATIBLE_P */
+#else							/* !HAVE__BUILTIN_TYPES_COMPATIBLE_P */
 #define AssertVariableIsOfType(varname, typename) \
 	StaticAssertStmt(sizeof(varname) == sizeof(typename), \
 	CppAsString(varname) " does not have type " CppAsString(typename))
 #define AssertVariableIsOfTypeMacro(varname, typename) \
 	((void) StaticAssertExpr(sizeof(varname) == sizeof(typename),		\
 	 CppAsString(varname) " does not have type " CppAsString(typename)))
-#endif /* HAVE__BUILTIN_TYPES_COMPATIBLE_P */
+#endif   /* HAVE__BUILTIN_TYPES_COMPATIBLE_P */
 
 
 /* ----------------------------------------------------------------
@@ -841,7 +841,7 @@ typedef NameData *Name;
  *
  * The function bodies must be defined in the module header prefixed by
  * STATIC_IF_INLINE, protected by a cpp symbol that the module's .c file must
- * define.  If the compiler doesn't support inline functions, the function
+ * define.	If the compiler doesn't support inline functions, the function
  * definitions are pulled in by the .c file as regular (not inline) symbols.
  *
  * The header must also declare the functions' prototypes, protected by
@@ -851,7 +851,7 @@ typedef NameData *Name;
 #define STATIC_IF_INLINE static inline
 #else
 #define STATIC_IF_INLINE
-#endif	/* PG_USE_INLINE */
+#endif   /* PG_USE_INLINE */
 
 /* ----------------------------------------------------------------
  *				Section 8:	random stuff

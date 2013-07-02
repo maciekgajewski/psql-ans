@@ -145,7 +145,7 @@ FindStreamingStart(uint32 *tli)
 		 * characters.
 		 */
 		if (strlen(dirent->d_name) != 24 ||
-			!strspn(dirent->d_name, "0123456789ABCDEF") == 24)
+			strspn(dirent->d_name, "0123456789ABCDEF") != 24)
 			continue;
 
 		/*
@@ -458,7 +458,7 @@ main(int argc, char **argv)
 		else
 		{
 			fprintf(stderr,
-					/* translator: check source for value for %d */
+			/* translator: check source for value for %d */
 					_("%s: disconnected; waiting %d seconds to try again\n"),
 					progname, RECONNECT_SLEEP_TIME);
 			pg_usleep(RECONNECT_SLEEP_TIME * 1000000);

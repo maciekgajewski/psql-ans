@@ -203,9 +203,9 @@ PerformAuthentication(Port *port)
 	{
 		/*
 		 * It is ok to continue if we fail to load the IDENT file, although it
-		 * means that you cannot log in using any of the authentication methods
-		 * that need a user name mapping. load_ident() already logged the
-		 * details of error to the log.
+		 * means that you cannot log in using any of the authentication
+		 * methods that need a user name mapping. load_ident() already logged
+		 * the details of error to the log.
 		 */
 	}
 #endif
@@ -356,11 +356,6 @@ CheckMyDatabase(const char *name, bool am_superuser)
 	/* Make the locale settings visible as GUC variables, too */
 	SetConfigOption("lc_collate", collate, PGC_INTERNAL, PGC_S_OVERRIDE);
 	SetConfigOption("lc_ctype", ctype, PGC_INTERNAL, PGC_S_OVERRIDE);
-
-	/* Use the right encoding in translated messages */
-#ifdef ENABLE_NLS
-	pg_bind_textdomain_codeset(textdomain(NULL));
-#endif
 
 	ReleaseSysCache(tup);
 }

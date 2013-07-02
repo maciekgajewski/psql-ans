@@ -192,6 +192,7 @@ main(int argc, char *argv[])
 					fprintf(stderr, _("%s: multitransaction ID (-m) must not be 0\n"), progname);
 					exit(1);
 				}
+
 				/*
 				 * XXX It'd be nice to have more sanity checks here, e.g. so
 				 * that oldest is not wrapped around w.r.t. nextMulti.
@@ -1035,7 +1036,7 @@ usage(void)
 	printf(_("  -e XIDEPOCH      set next transaction ID epoch\n"));
 	printf(_("  -f               force update to be done\n"));
 	printf(_("  -l XLOGFILE      force minimum WAL starting location for new transaction log\n"));
-	printf(_("  -m XID,OLDEST    set next multitransaction ID and oldest value\n"));
+	printf(_("  -m XID,XID       set next and oldest multitransaction ID\n"));
 	printf(_("  -n               no update, just show extracted control values (for testing)\n"));
 	printf(_("  -o OID           set next OID\n"));
 	printf(_("  -O OFFSET        set next multitransaction offset\n"));

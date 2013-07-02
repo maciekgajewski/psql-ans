@@ -162,7 +162,7 @@ typedef struct _internalPQconninfoOption
 	 * ---
 	 */
 	off_t		connofs;		/* Offset into PGconn struct, -1 if not there */
-}	internalPQconninfoOption;
+} internalPQconninfoOption;
 
 static const internalPQconninfoOption PQconninfoOptions[] = {
 	/*
@@ -389,7 +389,7 @@ pgthreadlock_t pg_g_threadlock = default_threadlock;
  *		pqDropConnection
  *
  * Close any physical connection to the server, and reset associated
- * state inside the connection object.  We don't release state that
+ * state inside the connection object.	We don't release state that
  * would be needed to reconnect, though.
  */
 void
@@ -1376,8 +1376,8 @@ connectDBStart(PGconn *conn)
 		{
 			appendPQExpBuffer(&conn->errorMessage,
 							  libpq_gettext("Unix-domain socket path \"%s\" is too long (maximum %d bytes)\n"),
-											portstr,
-											(int) (UNIXSOCK_PATH_BUFLEN - 1));
+							  portstr,
+							  (int) (UNIXSOCK_PATH_BUFLEN - 1));
 			conn->options_valid = false;
 			goto connect_errReturn;
 		}
@@ -1780,9 +1780,10 @@ keep_going:						/* We will come back to here until there is
 								addr_cur->ai_addrlen) < 0)
 					{
 						if (SOCK_ERRNO == EINPROGRESS ||
+#ifdef WIN32
 							SOCK_ERRNO == EWOULDBLOCK ||
-							SOCK_ERRNO == EINTR ||
-							SOCK_ERRNO == 0)
+#endif
+							SOCK_ERRNO == EINTR)
 						{
 							/*
 							 * This is fine - we're in non-blocking mode, and
